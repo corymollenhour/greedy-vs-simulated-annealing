@@ -8,14 +8,13 @@ Finds the maximum value of the Sum of Gaussians (SoG) function
 
 #include <iostream>
 #include <cstdlib>
-
 #include "SumofGaussians.h"
-
+#include <random>
 using namespace std;
 
 //Prototypes
 double newRandom();
-void drawGraph(SumofGaussians * sog, double * input, double * dz, int dims, int iterations);
+
 
 int main(int argc, char* argv[])
 {
@@ -42,7 +41,7 @@ int main(int argc, char* argv[])
 	double * dz = new double[ncenters];
 	double slope = 0;
 	double randomXPos = newRandom();
-
+	double slopeMin = exp(-8);
 	srand(seed);
 	rand();
 	randomXPos = newRandom();
@@ -50,33 +49,36 @@ int main(int argc, char* argv[])
 		input[x] = randomXPos; //Set xPos to random location
 
 	sog.deriv(input, dz);		//Take derivative at the xLocation
-	slope = dz[0];				//Check slope at the random location
+	for (int x = 0; x < dims; x++)
+		slope = dz[x];				//Check slope at the random location
 
 	if (slope > 0) { // Positieve slope -> climb right
-		slope = dz[0];
-		while (slope > 0.00000001) {
-			sog.deriv(input, dz);
+		for (int x = 0; x < dims; x++)
+			slope = dz[x];
+		while (slope > slopeMin) {
 			for (int x = 0; x < dims; x++) {
 				cout << input[x] << " "; //Print xPos
-				cout << sog.eval(input) << " "; //Print yPos
 				input[x] += 0.01*dz[x];
-				slope = dz[x];
-				cout << endl;
+				sog.deriv(input, dz);
+				slope = dz[0];
 			}
+			cout << sog.eval(input) << " "; //Print yPos
+			cout << endl;
 
 		}
 	}
 	else {			// Negative slope -> climb left
-		slope = dz[0];
-		while (slope < -0.00000001) {
-			sog.deriv(input, dz);
+		for (int x = 0; x < dims; x++)
+			slope = dz[x];
+		while (slope < slopeMin*-1) {
 			for (int x = 0; x < dims; x++) {
 				cout << input[x] << " "; //Print xPos
-				cout << sog.eval(input) << " "; //Print yPos
 				input[x] -= 0.01*dz[x];
-				slope = dz[x];
-				cout << endl;
+				sog.deriv(input, dz);
+				slope = dz[0];
 			}
+			cout << sog.eval(input) << " "; //Print yPos
+			cout << endl;
 
 		}
 	}
@@ -85,6 +87,7 @@ int main(int argc, char* argv[])
 
 }
 
+//Generate a random location
 double newRandom()
 {
 	return 0 + (double)rand() / RAND_MAX * (10 - 0);

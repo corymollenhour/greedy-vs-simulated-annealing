@@ -3,6 +3,7 @@ Cory Mollenhour
 CSCI 4350 - Joshua Phillips
 Due: 10/25/2018 11:00 PM
 Finds the maximum value of the Sum of Gaussians (SoG) function
+Using simulated Annealing
 */
 
 
@@ -46,8 +47,8 @@ int main(int argc, char* argv[])
 	double gY;
 	double gX;
 
-	double tmprMin = 0.0000001;
-	double alpha = 0.999999;
+	double tmprMin = 0.01;
+	double alpha = 0.999;
 
 	double acceptance;
 	double randOrigin;
@@ -56,9 +57,8 @@ int main(int argc, char* argv[])
 	double tmpr = 1.0;	
 	double * startOrigin = new double[dims];
 	for (int x = 0; x < dims; x++) {
-		startOrigin[x] = getRandom() * 10;
+			startOrigin[x] = getRandom() * 10;
 	}
-	double startOrigin = getRandom() * 10;					// <-- Initial point. Temp = 1
 	while(tmpr > tmprMin && i < maxIterations){
 		for (int x = 0; x < dims; x++) {
 			currentLoc[x] = newRandom(startOrigin[x], tmpr * 10);
@@ -72,17 +72,29 @@ int main(int argc, char* argv[])
 		} else {
 			if (acceptance >= randomInRange(0, 1)) { //Encourage checking around while the temp is hot
 				bestLoc = newLoc;
-				tmpr -= 0.001;
 			} else {
-				bestLoc = currentLoc;
+				for (int x = 0; x < dims; x++) {
+					newLoc[x] = currentLoc[x] + randomInRange(-0.01, 0.01);
+				}
+				gY = sog.eval(newLoc);
+				if (gY > gX) {	// Evaluate at new point
+					bestLoc = newLoc;
+				}else{
+					bestLoc = currentLoc;
+				}
 			}
-		}
+		}		
 		for (int x = 0; x < dims; x++) {
-			cout << bestLoc[x] << " "; //Print xPos
-			cout << endl;
+			if(tmpr < 0.1){
+				cout << bestLoc[x] << " "; //Print xPos
+			}
+			
 			startOrigin[x] = bestLoc[x];
 		}
-		cout << sog.eval(bestLoc) << " "; //Print yPos
+		if(tmpr < 0.1){
+			cout << sog.eval(bestLoc) << " "; //Print yPos
+			cout << endl;
+		}
 		tmpr *= alpha;
 		i++;
 	}
